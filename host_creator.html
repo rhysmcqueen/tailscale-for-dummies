@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailscale Host Creator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="Tailscale-for-dummies.png">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/"><img src="Tailscale-for-dummies.png" alt="Tailscale Logo"></a>
+        <div class="navbar-links">
+            <a href="acl_creator.html">ACL Configurator</a>
+            <a href="tag_creator.html">Tag Creator</a>
+            <a href="group_creator.html">Group Creator</a>
+            <a href="host_creator.html">Host Creator</a>
+        </div>
+    </div>
+    
+
+
+    <div class="form-container">
+        <h1>Host Creator for Dummies</h1>
+
+        <div class="form-group">
+            <label for="host-name">Host Name</label>
+            <input type="text" id="host-name" placeholder="Enter Host Name">
+        </div>
+
+        <div class="form-group">
+            <label for="host-ip">IP Address / CIDR Range</label>
+            <input type="text" id="host-ip" placeholder="Enter IP or CIDR Range (e.g., 192.168.1.1 or 192.168.1.0/24)">
+        </div>
+
+        <div class="form-group">
+            <button id="addHostButton">Add Host</button>
+        </div>
+
+        <div class="host-entries" id="host-entries">
+            <h3>Host Entries</h3>
+        </div>
+
+        <div class="output-container" id="output-container">
+            <h3>Combined Host Output</h3>
+            <pre id="combined-output">// Hosts
+"hosts": {
+}</pre>
+        </div>
+    </div>
+
+    <script>
+        const hosts = {};
+
+        document.getElementById('addHostButton').addEventListener('click', addHostEntry);
+
+        function addHostEntry() {
+            const hostName = document.getElementById('host-name').value;
+            const hostIp = document.getElementById('host-ip').value;
+
+            if (!hostName || !hostIp) {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            if (hosts[hostName]) {
+                alert('Host name already exists. Please choose a different name.');
+                return;
+            }
+
+            hosts[hostName] = hostIp;
+
+            updateCombinedOutput();
+
+            const hostEntriesContainer = document.getElementById('host-entries');
+
+            const hostEntryDiv = document.createElement('div');
+            hostEntryDiv.className = 'tag-entry';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'X';
+            deleteButton.className = 'delete-button';
+            deleteButton.onclick = () => {
+                delete hosts[hostName];
+                hostEntriesContainer.removeChild(hostEntryDiv);
+                updateCombinedOutput();
+            };
+
+            const hostText = JSON.stringify({ [hostName]: hostIp });
+
+            hostEntryDiv.textContent = hostText;
+            hostEntryDiv.appendChild(deleteButton);
+
+            hostEntriesContainer.appendChild(hostEntryDiv);
+        }
+
+        function updateCombinedOutput() {
+            const formattedHosts = Object.entries(hosts)
+                .map(([key, value]) => `    "${key}": "${value}"`)
+                .join(',\n');
+
+            const combinedOutput = `// Hosts\n"hosts": {
+${formattedHosts}
+},`;
+            document.getElementById('combined-output').textContent = combinedOutput;
+        }
+    </script>
+</body>
+</html>

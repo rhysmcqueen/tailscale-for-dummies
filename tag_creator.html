@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailscale Tag Creator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="Tailscale-for-dummies.png">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/"><img src="Tailscale-for-dummies.png" alt="Tailscale Logo"></a>
+        <div class="navbar-links">
+            <a href="acl_creator.html">ACL Configurator</a>
+            <a href="tag_creator.html">Tag Creator</a>
+            <a href="group_creator.html">Group Creator</a>
+            <a href="host_creator.html">Host Creator</a>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1>Tag Creator for Dummies</h1>
+
+        <div class="form-group">
+            <label for="tag-name">Tag Name</label>
+            <input type="text" id="tag-name" placeholder="Enter Tag Name">
+        </div>
+
+        <div class="form-group">
+            <label for="tag-owners">Owners (comma-separated emails)</label>
+            <textarea id="tag-owners" placeholder="Enter emails separated by commas"></textarea>
+        </div>
+
+        <div class="form-group">
+            <button id="addTagButton">Add Tag</button>
+        </div>
+
+        <div class="tag-entries" id="tag-entries">
+            <h3>Tag Entries</h3>
+        </div>
+
+        <div class="output-container" id="tag-output-container">
+            <h3>Combined Tag Output</h3>
+            <pre id="combined-tag-output">{
+  "tagOwners": {
+  }
+}</pre>
+        </div>
+    </div>
+
+    <script>
+        const tags = {};
+
+        document.getElementById('addTagButton').addEventListener('click', addTagEntry);
+
+        function addTagEntry() {
+            const tagName = document.getElementById('tag-name').value;
+            const tagOwners = document.getElementById('tag-owners').value;
+
+            if (!tagName) {
+                alert('Please fill out the tag name field.');
+                return;
+            }
+
+            const tagKey = `tag:${tagName}`;
+            tags[tagKey] = tagOwners ? tagOwners.split(',').map(email => email.trim()) : [];
+
+            updateCombinedOutput();
+
+            const tagEntriesContainer = document.getElementById('tag-entries');
+
+            const tagEntryDiv = document.createElement('div');
+            tagEntryDiv.className = 'tag-entry';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'X';
+            deleteButton.className = 'delete-button';
+            deleteButton.onclick = () => {
+                delete tags[tagKey];
+                tagEntriesContainer.removeChild(tagEntryDiv);
+                updateCombinedOutput();
+            };
+
+            const tagText = JSON.stringify({ [tagKey]: tags[tagKey] }, null, 2);
+
+            tagEntryDiv.textContent = tagText;
+            tagEntryDiv.appendChild(deleteButton);
+
+            tagEntriesContainer.appendChild(tagEntryDiv);
+        }
+
+        function updateCombinedOutput() {
+            const formattedTags = Object.entries(tags)
+                .map(([key, owners]) => `    "${key}": ${JSON.stringify(owners)}`)
+                .join(',\n');
+
+            const combinedOutput = `{
+  "tagOwners": {
+${formattedTags}
+  }
+}`;
+            document.getElementById('combined-tag-output').textContent = combinedOutput;
+        }
+    </script>
+</body>
+</html>

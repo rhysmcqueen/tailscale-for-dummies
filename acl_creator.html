@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailscale ACL GUI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="Tailscale-for-dummies.png">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/"><img src="Tailscale-for-dummies.png" alt="Tailscale Logo"></a>
+        <div class="navbar-links">
+            <a href="acl_creator.html">ACL Configurator</a>
+            <a href="tag_creator.html">Tag Creator</a>
+            <a href="group_creator.html">Group Creator</a>
+            <a href="host_creator.html">Host Creator</a>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1>ACL Creator for Dummies</h1>
+
+        <div class="form-group">
+            <label for="action">Action</label>
+            <select id="action">
+                <option value="accept">Accept</option>
+            </select>
+            <div class="learn-more">
+                <a href="https://tailscale.com/kb/1337/acl-syntax#action" target="_blank">Learn more about actions</a>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="proto">Protocol</label>
+            <select id="proto" onchange="handleProtocolChange()">
+                <option value="" selected>Select Protocol (Optional)</option>
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+                <option value="sctp">SCTP</option>
+                <option value="igmp">IGMP</option>
+                <option value="ipv4">IPv4</option>
+                <option value="egp">EGP</option>
+                <option value="igp">IGP</option>
+                <option value="gre">GRE</option>
+                <option value="esp">ESP</option>
+                <option value="ah">AH</option>
+            </select>
+            <p style="font-size: smaller; font-style: italic;">Only TCP, UDP, and SCTP traffic support specifying ports. All other protocols only support * as the protocol port.</p>
+            <div class="learn-more">
+                <a href="https://tailscale.com/kb/1337/acl-syntax#proto" target="_blank">Learn more about protocols</a>
+            </div>
+        </div>
+
+        <div class="form-group" id="port-group">
+            <label for="port">Port</label>
+            <select id="port" onchange="handleCustomInput('port', 'custom-port')">
+                <option value="80">HTTP (80)</option>
+                <option value="443">HTTPS (443)</option>
+                <option value="22">SSH (22)</option>
+                <option value="">Custom</option>
+            </select>
+            <input type="text" id="custom-port" class="conditional-input" placeholder="Enter Custom Port">
+        </div>
+
+        <div class="form-group">
+            <label for="source">Source</label>
+            <select id="source-type" onchange="handleCustomSourceInput()">
+                <option value="*">Any</option>
+                <option value="user">User</option>
+                <option value="group">Group</option>
+                <option value="ip">Tailscale IP</option>
+                <option value="subnet">Subnet CIDR</option>
+                <option value="host">Host</option>
+                <option value="tag">Tag</option>
+                <option value="autogroup">Autogroup</option>
+            </select>
+            <input type="text" id="custom-source" class="conditional-input" placeholder="Enter Source Value">
+            <div class="learn-more">
+                Allowed formats depend on selection. <a href="https://tailscale.com/kb/1337/acl-syntax#src" target="_blank">Learn more</a>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="destination">Destination</label>
+            <select id="destination-type" onchange="handleCustomDestinationInput()">
+                <option value="*">Any</option>
+                <option value="user">User</option>
+                <option value="group">Group</option>
+                <option value="ip">Tailscale IP</option>
+                <option value="subnet">Subnet CIDR</option>
+                <option value="host">Host</option>
+                <option value="tag">Tag</option>
+                <option value="autogroup">Autogroup</option>
+            </select>
+            <input type="text" id="custom-destination" class="conditional-input" placeholder="Enter Destination Value">
+            <div class="learn-more">
+                Allowed formats depend on selection. <a href="https://tailscale.com/kb/1337/acl-syntax#dst" target="_blank">Learn more</a>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button id="addAclRuleButton">Add ACL Rule</button>
+        </div>
+
+        <div class="acl-entries" id="acl-entries">
+            <h3>ACL Entries</h3>
+        </div>
+
+        <div class="output-container" id="acl-output-container">
+            <h3>ACL Combined Output</h3>
+            <pre id="acl-combined-output">"acls": [
+]</pre>
+        </div>
+    </div>
+
+    <script>
+        const acls = [];
+
+        document.getElementById('addAclRuleButton').addEventListener('click', addAclEntry);
+
+        function handleCustomInput(selectId, inputId) {
+            const select = document.getElementById(selectId);
+            const input = document.getElementById(inputId);
+            if (select.value === "") {
+                input.style.display = "block";
+            } else {
+                input.style.display = "none";
+                input.value = ""; // Clear the custom input field when switching back to a predefined value
+            }
+        }
+
+        function handleProtocolChange() {
+            const proto = document.getElementById('proto').value;
+            const portGroup = document.getElementById('port-group');
+
+            if (proto === "tcp" || proto === "udp" || proto === "sctp") {
+                portGroup.style.display = "block";
+            } else if (proto) {
+                portGroup.style.display = "none";
+                document.getElementById('custom-port').value = "";
+                document.getElementById('port').value = "*"; // Set port to *
+            } else {
+                portGroup.style.display = "block";
+            }
+        }
+
+        function handleCustomSourceInput() {
+            const sourceType = document.getElementById('source-type').value;
+            const customSource = document.getElementById('custom-source');
+            const placeholders = {
+                '*': '*',
+                'user': 'Enter an email address',
+                'group': 'group:<group_name>',
+                'ip': 'Enter a Tailscale IP (100.64.0.0/10)',
+                'subnet': '192.168.1.0/32',
+                'host': 'Enter a host name',
+                'tag': 'tag:<tag_name>',
+                'autogroup': 'autogroup:<role|property>'
+            };
+            customSource.style.display = sourceType === '*' ? 'none' : 'block';
+            customSource.placeholder = placeholders[sourceType] || 'Enter Source Value';
+            if (sourceType === '*') {
+                customSource.value = '*';
+            } else {
+                customSource.value = '';
+            }
+        }
+
+        function handleCustomDestinationInput() {
+            const destinationType = document.getElementById('destination-type').value;
+            const customDestination = document.getElementById('custom-destination');
+            const placeholders = {
+                '*': '*',
+                'user': 'Enter an email address',
+                'group': 'group:<group_name>',
+                'ip': 'Enter a Tailscale IP (100.64.0.0/10)',
+                'subnet': '192.168.1.0/32',
+                'host': 'Enter a host name',
+                'tag': 'tag:<tag_name>',
+                'autogroup': 'autogroup:<role|property>'
+            };
+            customDestination.style.display = destinationType === '*' ? 'none' : 'block';
+            customDestination.placeholder = placeholders[destinationType] || 'Enter Destination Value';
+            if (destinationType === '*') {
+                customDestination.value = '*';
+            } else {
+                customDestination.value = '';
+            }
+        }
+
+        function addAclEntry() {
+    const action = document.getElementById('action').value;
+    const portSelect = document.getElementById('port').value;
+    const customPort = document.getElementById('custom-port').value;
+    const proto = document.getElementById('proto').value;
+    const sourceType = document.getElementById('source-type').value;
+    const customSource = document.getElementById('custom-source').value;
+    const source = sourceType === '*' ? '*' : customSource;
+    const destinationType = document.getElementById('destination-type').value;
+    const customDestination = document.getElementById('custom-destination').value;
+    const destination = destinationType === '*' ? '*' : customDestination;
+
+    let port = portSelect || customPort;
+
+    // Enforce *:* for protocols that require * for port
+    if (proto && !(proto === "tcp" || proto === "udp" || proto === "sctp")) {
+        port = '*';
+    }
+
+    if (!action || (!port && (proto === "tcp" || proto === "udp" || proto === "sctp")) || !source || !destination) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+
+    const aclEntry = {
+        action: action,
+        src: [source],
+        proto: proto || undefined,
+        dst: [`${destination}:${port}`]
+    };
+
+    acls.push(aclEntry);
+    updateAclCombinedOutput();
+
+    const aclEntriesContainer = document.getElementById('acl-entries');
+
+    const aclEntryDiv = document.createElement('div');
+    aclEntryDiv.className = 'tag-entry';
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'X';
+    deleteButton.className = 'delete-button';
+    deleteButton.onclick = () => {
+        const index = acls.indexOf(aclEntry);
+        if (index > -1) {
+            acls.splice(index, 1);
+            updateAclCombinedOutput();
+        }
+        aclEntriesContainer.removeChild(aclEntryDiv);
+    };
+
+    aclEntryDiv.textContent = JSON.stringify(aclEntry, null, 4);
+    aclEntryDiv.appendChild(deleteButton);
+
+    aclEntriesContainer.appendChild(aclEntryDiv);
+}
+
+
+        function updateAclCombinedOutput() {
+            const formattedAcls = acls
+                .map(entry => `    ${JSON.stringify(entry, null, 4)}`)
+                .join(',');
+
+            const aclCombinedOutput = `"acls": [
+${formattedAcls}
+],`;
+            document.getElementById('acl-combined-output').textContent = aclCombinedOutput;
+        }
+    </script>
+</body>
+</html>
