@@ -251,7 +251,7 @@ function updateAclCombinedOutput() {
         .map(entry => `    ${JSON.stringify(entry)}`) // Indent each ACL entry
         .join(',\n'); // Join with a newline for each entry
 
-    const aclCombinedOutput = `{"acls":[\n${formattedAcls}\n]}`;
+    const aclCombinedOutput = `"acls":[\n${formattedAcls}\n],`;
     document.getElementById('acl-combined-output').textContent = aclCombinedOutput;
 }
 
