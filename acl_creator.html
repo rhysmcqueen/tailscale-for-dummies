@@ -246,17 +246,16 @@
     aclEntriesContainer.appendChild(aclEntryDiv);
 }
 
+function updateAclCombinedOutput() {
+    const formattedAcls = acls
+        .map(entry => `    ${JSON.stringify(entry)}`) // Indent each ACL entry
+        .join(',\n'); // Join with a newline for each entry
 
-        function updateAclCombinedOutput() {
-            const formattedAcls = acls
-                .map(entry => `    ${JSON.stringify(entry, null, 4)}`)
-                .join(',');
+    const aclCombinedOutput = `{"acls":[\n${formattedAcls}\n]}`;
+    document.getElementById('acl-combined-output').textContent = aclCombinedOutput;
+}
 
-            const aclCombinedOutput = `"acls": [
-${formattedAcls}
-],`;
-            document.getElementById('acl-combined-output').textContent = aclCombinedOutput;
-        }
+
     </script>
 </body>
 </html>
