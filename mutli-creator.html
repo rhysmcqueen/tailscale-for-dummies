@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailscale V2</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/"><img src="MISC/Tailscale-for-dummies.png" alt="Tailscale Logo"></a>
+        <div class="navbar-links">
+            <a href="acl_creator.html">ACL Configurator</a>
+            <a href="tag_creator.html">Tag Creator</a>
+            <a href="group_creator.html">Group Creator</a>
+            <a href="host_creator.html">Host Creator</a>
+            <a href="mutli-creator.html">Mutli-ACL-Creator</a>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <!-- Left Panel -->
+        <div class="form-container">
+            <h1>Create Items</h1>
+            <div class="form-group">
+                <label for="item-type">Select Type</label>
+                <select id="item-type">
+                    <option value="">-- Select --</option>
+                    <option value="acl">ACL</option>
+                    <option value="tag">Tag</option>
+                    <option value="host">Host</option>
+                    <option value="group">Group</option>
+                </select>
+            </div>
+            <div id="dynamic-form"></div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="code-editor-container">
+            <h1>Generated Output</h1>
+            <pre class="code-editor" id="output">{
+    "acls": [],
+    "tagOwners": {},
+    "hosts": {},
+    "groups": {}
+}</pre>
+        </div>
+    </div>
+
+    <script src="v2.js"></script>
+</body>
+</html>

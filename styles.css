@@ -237,3 +237,39 @@ Navigation Bar */
         margin: 5px 10px;
     }
 }
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal-width columns */
+    gap: 20px; /* Space between the columns */
+    align-items: start; /* Align items at the top */
+    margin: 20px;
+}
+
+.form-container {
+    max-width: 100%; /* Ensure it spans the grid cell */
+    background-color: #222; /* Match design */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.code-editor-container {
+    max-width: 100%; /* Ensure it spans the grid cell */
+    background-color: #222; /* Match design */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.code-editor {
+    width: 100%;
+    height: 400px;
+    background-color: #333;
+    color: white;
+    font-family: monospace;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: 4px;
+    outline: none;
+    white-space: pre-wrap;
+}
